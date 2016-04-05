@@ -757,7 +757,7 @@ void init_entity_runnable_average(struct sched_entity *se)
 	sa->load_sum = sa->load_avg * LOAD_AVG_MAX;
 	/*
 	 * In previous Android versions, we used to have:
-	 * 	sa->util_avg = scale_load_down(SCHED_LOAD_SCALE);
+	 * 	sa->util_avg = scale_load_down(SCHED_CAPACITY_SCALE);
 	 * 	sa->util_sum = sa->util_avg * LOAD_AVG_MAX;
 	 * However, that functionality has been moved to enqueue.
 	 * It is unclear if we should restore this in enqueue.
@@ -6583,7 +6583,7 @@ static int cpu_util_wake(int cpu, struct task_struct *p);
 
 /*
  * __cpu_norm_util() returns the cpu util relative to a specific capacity,
- * i.e. it's busy ratio, in the range [0..SCHED_LOAD_SCALE], which is useful for
+ * i.e. it's busy ratio, in the range [0..SCHED_CAPACITY_SCALE], which is useful for
  * energy calculations.
  *
  * Since util is a scale-invariant utilization defined as:
@@ -6638,7 +6638,7 @@ static unsigned long group_max_util(struct energy_env *eenv, int cpu_idx)
 
 /*
  * group_norm_util() returns the approximated group util relative to it's
- * current capacity (busy ratio), in the range [0..SCHED_LOAD_SCALE], for use
+ * current capacity (busy ratio), in the range [0..SCHED_CAPACITY_SCALE], for use
  * in energy calculations.
  *
  * Since task executions may or may not overlap in time in the group the true
@@ -9615,7 +9615,7 @@ group_is_overloaded(struct lb_env *env, struct sg_lb_stats *sgs)
 static inline bool
 group_smaller_cpu_capacity(struct sched_group *sg, struct sched_group *ref)
 {
-	return sg->sgc->max_capacity + capacity_margin - SCHED_LOAD_SCALE <
+	return sg->sgc->max_capacity + capacity_margin - SCHED_CAPACITY_SCALE <
 							ref->sgc->max_capacity;
 }
 
@@ -10176,7 +10176,7 @@ static inline void calculate_imbalance(struct lb_env *env, struct sd_lb_stats *s
 	if (busiest->group_type == group_overloaded &&
 	    local->group_type   == group_overloaded) {
 		load_above_capacity = busiest->sum_nr_running *
-					SCHED_LOAD_SCALE;
+					scale_load_down(NICE_0_LOAD);
 		if (load_above_capacity > busiest->group_capacity)
 			load_above_capacity -= busiest->group_capacity;
 		else
