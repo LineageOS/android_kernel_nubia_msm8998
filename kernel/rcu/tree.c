@@ -2419,6 +2419,7 @@ rcu_report_qs_rdp(int cpu, struct rcu_state *rsp, struct rcu_data *rdp)
 	}
 	mask = rdp->grpmask;
 	if ((rnp->qsmask & mask) == 0) {
+		rdp->core_needs_qs = 0;
 		raw_spin_unlock_irqrestore(&rnp->lock, flags);
 	} else {
 		rdp->core_needs_qs = 0;
