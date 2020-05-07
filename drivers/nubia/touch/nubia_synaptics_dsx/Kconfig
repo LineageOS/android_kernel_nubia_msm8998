@@ -111,6 +111,13 @@ config TOUCHSCREEN_NUBIA_SYNAPTICS_DSX_REVERSED_KEYS_FORCE
 	help
 	  Say Y here to enable support for reversed keys.
 
+config TOUCHSCREEN_NUBIA_SYNAPTICS_DSX_EDGE_LIMIT
+	bool "Synaptics DSX limit edge support"
+	default n
+	depends on TOUCHSCREEN_NUBIA_SYNAPTICS_DSX_CORE
+	help
+	  Say Y here to enable support for edge touch sensitivity limits.
+
 config TOUCHSCREEN_NUBIA_FWID_FORCE_UPDATE
 	tristate "Force Synaptics DSX firmware update if id not the same"
 	depends on TOUCHSCREEN_NUBIA_SYNAPTICS_DSX_CORE

@@ -78,9 +78,9 @@
 #define REPORT_2D_Z
 #define REPORT_2D_W
 
-#define MINXTOUCH 42
-#define MAXXTOUCH 1038
-#define LIMITTOUCH 1
+#ifdef CONFIG_TOUCHSCREEN_NUBIA_SYNAPTICS_DSX_EDGE_LIMIT
+#define NUBIA_SCREEN_WIDTH 1080
+#endif
 
 //#define REPORT_2D_PRESSURE
 
@@ -201,6 +201,14 @@ static ssize_t synaptics_rmi4_reversed_keys_show(struct device *dev,
 		struct device_attribute *attr, char *buf);
 
 static ssize_t synaptics_rmi4_reversed_keys_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count);
+#endif
+
+#ifdef CONFIG_TOUCHSCREEN_NUBIA_SYNAPTICS_DSX_EDGE_LIMIT
+static ssize_t synaptics_rmi4_edge_limit_size_show(struct device *dev,
+		struct device_attribute *attr, char *buf);
+
+static ssize_t synaptics_rmi4_edge_limit_size_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count);
 #endif
 
@@ -695,6 +703,11 @@ static struct device_attribute attrs[] = {
 			synaptics_rmi4_reversed_keys_show,
 			synaptics_rmi4_reversed_keys_store),
 #endif
+#ifdef CONFIG_TOUCHSCREEN_NUBIA_SYNAPTICS_DSX_EDGE_LIMIT
+	__ATTR(edge_limit_size, (S_IRUGO | S_IWUSR),
+			synaptics_rmi4_edge_limit_size_show,
+			synaptics_rmi4_edge_limit_size_store),
+#endif
 	__ATTR(suspend, S_IWUSR,
 			synaptics_rmi4_show_error,
 			synaptics_rmi4_suspend_store),
@@ -1072,6 +1085,31 @@ static ssize_t synaptics_rmi4_reversed_keys_store(struct device *dev,
 }
 #endif
 
+#ifdef CONFIG_TOUCHSCREEN_NUBIA_SYNAPTICS_DSX_EDGE_LIMIT
+static ssize_t synaptics_rmi4_edge_limit_size_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct synaptics_rmi4_data *rmi4_data = dev_get_drvdata(dev);
+	return snprintf(buf, PAGE_SIZE, "%d\n",
+			rmi4_data->edge_limit_left);
+}
+static ssize_t synaptics_rmi4_edge_limit_size_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	int rc, val;
+	rc = kstrtoint(buf, 0, &val);
+	if (rc) {
+		pr_err("%s: error getting size\n", __func__);
+		return -EINVAL;
+	}
+
+	struct synaptics_rmi4_data *rmi4_data = dev_get_drvdata(dev);
+	rmi4_data->edge_limit_left = val;
+	rmi4_data->edge_limit_right = (NUBIA_SCREEN_WIDTH - val);
+	return strnlen(buf, count);
+}
+#endif
+
 static ssize_t synaptics_rmi4_suspend_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
@@ -1426,8 +1464,9 @@ static int synaptics_rmi4_f11_abs_report(struct synaptics_rmi4_data *rmi4_data,
 			if (rmi4_data->hw_if->board_data->y_flip)
 				y = rmi4_data->sensor_max_y - y;
 
-#ifdef LIMITTOUCH
-			if ((x >= 0) && ((x < MINXTOUCH) || (x > MAXXTOUCH))) {
+#ifdef CONFIG_TOUCHSCREEN_NUBIA_SYNAPTICS_DSX_EDGE_LIMIT
+			if ((x >= 0) && ((x < rmi4_data->edge_limit_left) ||
+					(x > rmi4_data->edge_limit_right))) {
 #ifdef TYPE_B_PROTOCOL
 				/*
 				* Each 2-bit finger status field represents the following:
@@ -1684,8 +1723,9 @@ static int synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
 					MT_TOOL_FINGER, 1);
 #endif
 
-#ifdef LIMITTOUCH
-			if ((x >= 0) && ((x < MINXTOUCH) || (x > MAXXTOUCH))) {
+#ifdef CONFIG_TOUCHSCREEN_NUBIA_SYNAPTICS_DSX_EDGE_LIMIT
+			if ((x >= 0) && ((x < rmi4_data->edge_limit_left) ||
+					(x > rmi4_data->edge_limit_right))) {
 #ifdef TYPE_B_PROTOCOL
 				/*
 				* Each 2-bit finger status field represents the following:
@@ -4550,6 +4590,11 @@ static int synaptics_rmi4_probe(struct platform_device *pdev)
 #ifdef NUBIA_SYNAPTICS_PALM_SUPPORT
 	rmi4_data->palm_suspend = false;
 	rmi4_data->palm_sleep = false;
+#endif
+
+#ifdef CONFIG_TOUCHSCREEN_NUBIA_SYNAPTICS_DSX_EDGE_LIMIT
+	rmi4_data->edge_limit_left = 0;
+	rmi4_data->edge_limit_right = NUBIA_SCREEN_WIDTH;
 #endif
 
 	rmi4_data->reset_device = synaptics_rmi4_reset_device;

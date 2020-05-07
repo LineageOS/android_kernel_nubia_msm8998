@@ -422,6 +422,10 @@ struct synaptics_rmi4_data {
 #ifdef CONFIG_TOUCHSCREEN_NUBIA_SYNAPTICS_DSX_REVERSED_KEYS_FORCE
 	bool enable_reversed_keys;
 #endif
+#ifdef CONFIG_TOUCHSCREEN_NUBIA_SYNAPTICS_DSX_EDGE_LIMIT
+	int edge_limit_left;
+	int edge_limit_right;
+#endif
 	bool wedge_sensor;
 	bool report_pressure;
 	bool stylus_enable;
