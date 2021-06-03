@@ -1107,9 +1107,8 @@ static void pa224_irq_enable(struct pa224_data *data, bool enable, bool flag_syn
 		SENSOR_LOG_DEBUG("doubule %s irq %d\n",enable? "enable" : "disable",
 			data->irq);
 		return;
-	} else {
-			data->irq_enabled = enable;
 	}
+	data->irq_enabled = enable;
 
 	if (enable) {
 		enable_irq(data->irq);
