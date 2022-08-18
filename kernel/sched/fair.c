@@ -12448,6 +12448,13 @@ static void task_move_group_fair(struct task_struct *p)
 
 static void task_change_group_fair(struct task_struct *p, int type)
 {
+	/*
+	 * We couldn't detach or attach a forked task which
+	 * hasn't been woken up by wake_up_new_task().
+	 */
+	if (p->state == TASK_NEW)
+		return;
+
 	switch (type) {
 	case TASK_SET_GROUP:
 		task_set_group_fair(p);
