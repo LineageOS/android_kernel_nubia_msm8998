@@ -5852,7 +5852,7 @@ void sched_setnuma(struct task_struct *p, int nid)
 		enqueue_task(rq, p, ENQUEUE_RESTORE);
 	if (running)
 		p->sched_class->set_curr_task(rq);
-        task_rq_unlock(rq, p, &flags);
+	task_rq_unlock(rq, p, &flags);
 }
 #endif /* CONFIG_NUMA_BALANCING */
 
