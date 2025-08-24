@@ -35,7 +35,9 @@
 #include "sched.h"
 #include <trace/events/sched.h>
 #include "tune.h"
+#ifdef CONFIG_SCHED_WALT
 #include "walt.h"
+#endif
 
 /*
  * Targeted preemption latency for CPU-bound tasks:
@@ -5948,7 +5950,9 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 		if (cfs_rq_throttled(cfs_rq))
 			break;
 		cfs_rq->h_nr_running++;
+#ifdef CONFIG_SCHED_WALT
 		walt_inc_cfs_cumulative_runnable_avg(cfs_rq, p);
+#endif
 		inc_cfs_rq_hmp_stats(cfs_rq, p, 1);
 
 		flags = ENQUEUE_WAKEUP;
@@ -5957,7 +5961,9 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 	for_each_sched_entity(se) {
 		cfs_rq = cfs_rq_of(se);
 		cfs_rq->h_nr_running++;
+#ifdef CONFIG_SCHED_WALT
 		walt_inc_cfs_cumulative_runnable_avg(cfs_rq, p);
+#endif
 		inc_cfs_rq_hmp_stats(cfs_rq, p, 1);
 
 		if (cfs_rq_throttled(cfs_rq))
@@ -5974,7 +5980,9 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 
 #ifdef CONFIG_SMP
 	if (energy_aware() && !se) {
+#ifdef CONFIG_SCHED_WALT
 		walt_inc_cumulative_runnable_avg(rq, p);
+#endif
 		if (!task_new && !rq->rd->overutilized &&
 		    cpu_overutilized(rq->cpu)) {
 			rq->rd->overutilized = true;
@@ -6026,7 +6034,9 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 		if (cfs_rq_throttled(cfs_rq))
 			break;
 		cfs_rq->h_nr_running--;
+#ifdef CONFIG_SCHED_WALT
 		walt_dec_cfs_cumulative_runnable_avg(cfs_rq, p);
+#endif
 		dec_cfs_rq_hmp_stats(cfs_rq, p, 1);
 
 		/* Don't dequeue parent if it has other entities besides us */
@@ -6049,7 +6059,9 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 
 		cfs_rq = cfs_rq_of(se);
 		cfs_rq->h_nr_running--;
+#ifdef CONFIG_SCHED_WALT
 		walt_dec_cfs_cumulative_runnable_avg(cfs_rq, p);
+#endif
 		dec_cfs_rq_hmp_stats(cfs_rq, p, 1);
 
 		if (cfs_rq_throttled(cfs_rq))
@@ -6069,7 +6081,7 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 		dec_rq_hmp_stats(rq, p, 1);
 	}
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SCHED_WALT
 	if (energy_aware() && !se)
 		walt_dec_cumulative_runnable_avg(rq, p);
 #endif /* CONFIG_SMP */
@@ -7675,8 +7687,10 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 			if (!cpu_online(i))
 				continue;
 
+#ifdef CONFIG_SCHED_WALT
 			if (walt_cpu_high_irqload(i))
 				continue;
+#endif
 
 			/*
 			 * p's blocked utilization is still accounted for on prev_cpu

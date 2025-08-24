@@ -12,7 +12,9 @@
 #include <linux/hrtimer.h>
 
 #include "tune.h"
+#ifdef CONFIG_SCHED_WALT
 #include "walt.h"
+#endif
 
 int sched_rr_timeslice = RR_TIMESLICE;
 int sysctl_sched_rr_timeslice = (MSEC_PER_SEC * RR_TIMESLICE) / HZ;
@@ -1499,7 +1501,9 @@ enqueue_task_rt(struct rq *rq, struct task_struct *p, int flags)
 		rt_se->timeout = 0;
 
 	enqueue_rt_entity(rt_se, flags);
+#ifdef CONFIG_SCHED_WALT
 	walt_inc_cumulative_runnable_avg(rq, p);
+#endif
 	inc_hmp_sched_stats_rt(rq, p);
 
 	if (!task_current(rq, p) && tsk_nr_cpus_allowed(p) > 1)
@@ -1544,7 +1548,9 @@ static void dequeue_task_rt(struct rq *rq, struct task_struct *p, int flags)
 
 	update_curr_rt(rq);
 	dequeue_rt_entity(rt_se, flags);
+#ifdef CONFIG_SCHED_WALT
 	walt_dec_cumulative_runnable_avg(rq, p);
+#endif
 	dec_hmp_sched_stats_rt(rq, p);
 
 	dequeue_pushable_task(rq, p);

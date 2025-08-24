@@ -6,7 +6,9 @@
 #include <linux/context_tracking.h>
 #include <linux/cpufreq_times.h>
 #include "sched.h"
+#ifdef CONFIG_SCHED_WALT
 #include "walt.h"
+#endif
 #ifdef CONFIG_PARAVIRT
 #include <asm/paravirt.h>
 #endif
@@ -81,7 +83,9 @@ void irqtime_account_irq(struct task_struct *curr)
 	irq_time_write_end();
 
 	if (account) {
+#ifdef CONFIG_SCHED_WALT
 		walt_account_irqtime(cpu, curr, delta, wallclock);
+#endif
 		sched_account_irqtime(cpu, curr, delta, wallclock);
 	} else if (curr != this_cpu_ksoftirqd())
 		sched_account_irqstart(cpu, curr, wallclock);
